@@ -43,13 +43,19 @@ try {
             enum: ["Admin", "Manager", "User"],
           },
           maxStorageInBytes: {
-            bsonType: "long",
+            bsonType: ["long", "int"],
           },
           deleted: {
             bsonType: "bool",
           },
           __v: {
             bsonType: "int",
+          },
+          createdAt: {
+            bsonType: "date",
+          },
+          updatedAt: {
+            bsonType: "date",
           },
         },
         additionalProperties: false,
@@ -131,6 +137,9 @@ try {
           },
           updatedAt: {
             bsonType: "date",
+          },
+          isUploading: {
+            bsonType: "bool",
           },
         },
         additionalProperties: false,

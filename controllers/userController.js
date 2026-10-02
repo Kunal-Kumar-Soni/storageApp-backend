@@ -39,14 +39,14 @@ export const registerUser = async (req, res, next) => {
       { session },
     );
 
-    User.insertOne({ _id: userId, name, email, password, rootDirId }, { session });
+    await User.insertOne({ _id: userId, name, email, password, rootDirId }, { session });
 
-    session.commitTransaction();
+    await session.commitTransaction();
 
     res.status(201).json({ message: "User registered" });
   } catch (err) {
-    console.log(err);
-    session.abortTransaction();
+    console.dir(err, { depth: null });
+    await session.abortTransaction();
     if (err.code === 121) {
       res.status(400).json({ error: "Invalid input, please enter valid details" });
     } else if (err.code === 11000) {

@@ -1,4 +1,3 @@
-import { rm } from "node:fs/promises";
 import Directory from "../models/directoryModel.js";
 import File from "../models/fileModel.js";
 import { updateDirectoriesSize } from "./filesController.js";
@@ -72,7 +71,7 @@ export const deleteDirectory = async (req, res, next) => {
     const directoryData = await Directory.findOne({ _id: id, userId: req.user._id }).lean();
 
     if (!directoryData) {
-      return res.status(404).json({ error: "File not found!" });
+      return res.status(404).json({ error: "Directory not found!" });
     }
 
     async function getDirectoriesContent(id) {
@@ -91,10 +90,13 @@ export const deleteDirectory = async (req, res, next) => {
 
     const { directories, files } = await getDirectoriesContent(id);
 
-    const keys = files.map(({ _id, extension }) => ({ Key: `${_id}${extension}` }));
-    console.log(keys);
-    const res = await deleteS3Files(keys);
-    console.log(res);
+    if (files.length > 0) {
+      const keys = files.map(({ _id, extension }) => ({
+        Key: `${_id}${extension}`,
+      }));
+
+      await deleteS3Files(keys);
+    }
 
     await File.deleteMany({ _id: { $in: files.map(({ _id }) => _id) } });
 

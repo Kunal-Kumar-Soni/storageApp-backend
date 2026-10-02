@@ -135,7 +135,7 @@ export const uploadInitiate = async (req, res) => {
 
     return res.json({ uploadedSignedUrl, fileId: insertedFile.id });
   } catch (err) {
-    console.log(err);
+    console.dir(err, { depth: null });
   }
 };
 
