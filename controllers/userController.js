@@ -62,7 +62,7 @@ export const registerUser = async (req, res, next) => {
 };
 
 export const loginUser = async (req, res) => {
-  const { success, data, error } = loginSchema.safeParse(req.body);
+  const { success, data } = loginSchema.safeParse(req.body);
 
   if (!success) {
     return res.status(400).json({ error: "Invalid Credentials" });
@@ -97,7 +97,8 @@ export const loginUser = async (req, res) => {
   res.cookie("sid", sessionId, {
     httpOnly: true,
     signed: true,
-    sameSite: "lax",
+    sameSite: "none",
+    secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
   res.json({ message: "Logged In" });
