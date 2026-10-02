@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --watch --env-file=.env app.js",
     "start": "node  app.js",
-    "build": "node build.js",
+    "build": "npm i",
     "setup": "node --env-file=.env config/setup.js"
   },
   "keywords": [],
