@@ -1,10 +1,12 @@
 {
-  "name": "01_intro_to_express",
+  "name": "storageApp",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "node --watch --env-file=.env app.js",
+    "start": "node --env-file=.env app.js",
+    "build": "node build.js",
     "setup": "node --env-file=.env config/setup.js"
   },
   "keywords": [],
