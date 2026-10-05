@@ -44,14 +44,10 @@ export const handleRazorpayWebhook = async (req, res) => {
 
   if (req.body.event === "subscription.activated") {
     const { id, plan_id, status } = req.body.payload.subscription.entity;
-
     const subscription = await Subscription.findOneAndUpdate(
       { subscriptionId: id },
       { $set: { status } },
     );
-
-    console.log("About to update user:", subscription.userId);
-
     try {
       const updatedUser = await User.findByIdAndUpdate(
         subscription.userId,
@@ -65,8 +61,7 @@ export const handleRazorpayWebhook = async (req, res) => {
 
       console.log("Updated user:", updatedUser);
     } catch (error) {
-      console.error("USER UPDATE ERROR:", error);
-      console.error("ERROR MESSAGE:", error.message);
+      console.error("USER UPDATE ERROR:", JSON.stringify(error, null, 2));
     }
 
     return res.json({ message: "subscription activated!" });
