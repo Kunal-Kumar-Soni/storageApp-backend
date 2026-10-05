@@ -76,6 +76,7 @@ export const loginWithGoogle = async (req, res, next) => {
       httpOnly: true,
       signed: true,
       sameSite: "lax",
+      secure: true,
       maxAge: 60 * 1000 * 60 * 24 * 7,
     });
 
@@ -111,6 +112,7 @@ export const loginWithGoogle = async (req, res, next) => {
       httpOnly: true,
       signed: true,
       sameSite: "lax",
+      secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
