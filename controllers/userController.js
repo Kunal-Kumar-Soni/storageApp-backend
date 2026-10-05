@@ -97,7 +97,7 @@ export const loginUser = async (req, res) => {
   res.cookie("sid", sessionId, {
     httpOnly: true,
     signed: true,
-    sameSite: "lax",
+    sameSite: "none",
     secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
