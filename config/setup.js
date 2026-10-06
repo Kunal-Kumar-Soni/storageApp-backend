@@ -43,7 +43,7 @@ try {
             enum: ["Admin", "Manager", "User"],
           },
           maxStorageInBytes: {
-            bsonType: ["long", "int"],
+            bsonType: ["long", "int", "double"],
           },
           deleted: {
             bsonType: "bool",
