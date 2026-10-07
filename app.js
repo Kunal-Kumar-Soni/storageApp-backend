@@ -38,6 +38,9 @@ app.use(
   }),
 );
 
+app.get("/", (req, res) => {
+  return res.json({ message: "hello from storageApp!" });
+});
 app.use("/directory", checkAuth, directoryRoutes);
 app.use("/file", checkAuth, filesRoutes);
 app.use("/subscriptions", checkAuth, subscriptionRoutes);
