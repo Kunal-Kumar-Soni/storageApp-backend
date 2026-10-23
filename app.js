@@ -44,8 +44,9 @@ app.get("/", (req, res) => {
 });
 
 app.post("github-webhook", (req, res) => {
-  console.log(req);
-  const bashChildProcess = spawn("bash", ["deploy-frontend.sh"]);
+  console.log(req.headers);
+  console.log(req.body);
+  const bashChildProcess = spawn("bash", ["/home/ubuntu/deploy-frontend.sh"]);
 
   bashChildProcess.stdout.on("data", (data) => {
     process.stdout.write(data);
