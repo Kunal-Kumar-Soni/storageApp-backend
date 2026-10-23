@@ -11,6 +11,7 @@ import checkAuth from "./middleware/auth.js";
 import { connectDB } from "./config/db.js";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import { spawn } from "child_process";
 
 await connectDB();
 
@@ -41,6 +42,33 @@ app.use(
 app.get("/", (req, res) => {
   return res.json({ message: "hello from storageApp!" });
 });
+
+app.post("github-webhook", (req, res) => {
+  console.log(req);
+  const bashChildProcess = spawn("bash", ["deploy-frontend.sh"]);
+
+  bashChildProcess.stdout.on("data", (data) => {
+    process.stdout.write(data);
+  });
+
+  bashChildProcess.stderr.on("data", (err) => {
+    process.stderr.write(err);
+  });
+
+  bashChildProcess.on("close", (code) => {
+    if (code === 0) {
+      console.log("Script executed successfully!");
+    } else {
+      console.log("Script failed");
+    }
+  });
+
+  bashChildProcess.on("error", (err) => {
+    console.log("Error in the spawning process!");
+    console.log(err);
+  });
+});
+
 app.use("/directory", checkAuth, directoryRoutes);
 app.use("/file", checkAuth, filesRoutes);
 app.use("/subscriptions", checkAuth, subscriptionRoutes);
@@ -56,5 +84,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`server started port at ${PORT}`);
 });
-
-//adding comment for testing
