@@ -12,6 +12,7 @@ import { connectDB } from "./config/db.js";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { spawn } from "child_process";
+import crypto from "crypto";
 
 await connectDB();
 
@@ -44,8 +45,19 @@ app.get("/", (req, res) => {
 });
 
 app.post("/github-webhook", (req, res) => {
-  console.log("Webhook endpoint reached!");
-  res.status(200).json({ message: "OK" });
+  const githubWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
+  const givenSignature = req.headers["X-Hub-Signature-256"];
+  const calculatedSignature = crypto
+    .createHmac("sha1", githubWebhookSecret)
+    .update(JSON.stringify(payload))
+    .digest("hex");
+
+  if (givenSignature !== calculatedSignature) {
+    console.log("Invalid webhook signature");
+    return res.sendStatus(401);
+  }
+
+  res.json({ message: "OK" });
   const bashChildProcess = spawn("bash", ["/home/ubuntu/deploy-frontend.sh"]);
 
   bashChildProcess.stdout.on("data", (data) => {
