@@ -47,15 +47,16 @@ app.get("/", (req, res) => {
 app.post("/github-webhook", (req, res) => {
   const githubWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
   const givenSignature = req.headers["X-Hub-Signature-256"];
-
+  console.log({ githubWebhookSecret, githubWebhookSecret });
   if (!givenSignature) {
     return res.status(401).json({ error: "Invalid signature" });
   }
 
-  const calculatedSignature = crypto
-    .createHmac("sha256", githubWebhookSecret)
-    .update(JSON.stringify(req.body))
-    .digest("hex");
+  const calculatedSignature =
+    "sha256=" +
+    crypto.createHmac("sha256", githubWebhookSecret).update(JSON.stringify(req.body)).digest("hex");
+
+  console.log({ calculatedSignature });
 
   if (givenSignature !== calculatedSignature) {
     return res.status(401).json({ error: "Invalid signature" });
