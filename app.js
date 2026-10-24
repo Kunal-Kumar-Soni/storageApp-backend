@@ -48,7 +48,7 @@ app.post("/github-webhook", (req, res) => {
   const githubWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
   const givenSignature = req.headers["X-Hub-Signature-256"];
   const calculatedSignature = crypto
-    .createHmac("sha1", githubWebhookSecret)
+    .createHmac("sha256", githubWebhookSecret)
     .update(JSON.stringify(payload))
     .digest("hex");
 
