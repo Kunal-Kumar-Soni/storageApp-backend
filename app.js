@@ -46,8 +46,7 @@ app.get("/", (req, res) => {
 
 app.post("/github-webhook", (req, res) => {
   const githubWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
-  const givenSignature = req.headers["X-Hub-Signature-256"];
-  console.log({ githubWebhookSecret, githubWebhookSecret });
+  const givenSignature = req.headers["x-hub-signature-256"];
   if (!givenSignature) {
     return res.status(401).json({ error: "Invalid signature" });
   }
@@ -55,8 +54,6 @@ app.post("/github-webhook", (req, res) => {
   const calculatedSignature =
     "sha256=" +
     crypto.createHmac("sha256", githubWebhookSecret).update(JSON.stringify(req.body)).digest("hex");
-
-  console.log({ calculatedSignature });
 
   if (givenSignature !== calculatedSignature) {
     return res.status(401).json({ error: "Invalid signature" });
@@ -75,9 +72,9 @@ app.post("/github-webhook", (req, res) => {
 
   bashChildProcess.on("close", (code) => {
     if (code === 0) {
-      console.log("Script executed successfully!");
+      console.log("✅ Deployment completed successfully!");
     } else {
-      console.log("Script failed");
+      console.log("❌ Script failed");
     }
   });
 
