@@ -41,7 +41,7 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-  return res.json({ message: "hello from storageApp!" });
+  return res.json({ message: "hello from my storageApp!" });
 });
 
 app.post("/github-webhook", (req, res) => {
