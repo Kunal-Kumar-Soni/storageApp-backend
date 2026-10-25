@@ -60,7 +60,17 @@ app.post("/github-webhook", (req, res) => {
   }
 
   res.json({ message: "OK" });
-  const bashChildProcess = spawn("bash", ["/home/ubuntu/deploy-frontend.sh"]);
+
+  let repository;
+  if (req.body.repository.name === "storageApp-frontend") {
+    repository = "frontend";
+  } else {
+    repository = "backend";
+  }
+
+  console.log({ repository });
+
+  const bashChildProcess = spawn("bash", [`/home/ubuntu/deploy-${repository}.sh`]);
 
   bashChildProcess.stdout.on("data", (data) => {
     process.stdout.write(data);
@@ -72,9 +82,9 @@ app.post("/github-webhook", (req, res) => {
 
   bashChildProcess.on("close", (code) => {
     if (code === 0) {
-      console.log("✅ Deployment completed successfully!");
+      console.log("Script executed successfully");
     } else {
-      console.log("❌ Script failed");
+      console.log("Script failed");
     }
   });
 
