@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -42,7 +42,7 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-  return res.json({ message: "hello from my storageApp!" });
+  return res.json({ message: "hello from our storageApp!" });
 });
 
 app.post("/github-webhook", (req, res) => {
@@ -68,8 +68,6 @@ app.post("/github-webhook", (req, res) => {
   } else {
     repository = "backend";
   }
-
-  console.log({ repository });
 
   const bashChildProcess = spawn("bash", [`/home/ubuntu/deploy-${repository}.sh`]);
 
