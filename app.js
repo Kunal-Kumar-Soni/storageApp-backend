@@ -36,7 +36,10 @@ app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: [
+      process.env.CLIENT_URL,
+      "http://kunal-storageapp-frontend.s3-website.ap-south-1.amazonaws.com",
+    ],
     credentials: true,
   }),
 );
