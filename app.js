@@ -42,55 +42,7 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-  return res.json({ message: "hello from our storageApp!" });
-});
-
-app.post("/github-webhook", (req, res) => {
-  const githubWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
-  const givenSignature = req.headers["x-hub-signature-256"];
-  if (!givenSignature) {
-    return res.status(401).json({ error: "Invalid signature" });
-  }
-
-  const calculatedSignature =
-    "sha256=" +
-    crypto.createHmac("sha256", githubWebhookSecret).update(JSON.stringify(req.body)).digest("hex");
-
-  if (givenSignature !== calculatedSignature) {
-    return res.status(401).json({ error: "Invalid signature" });
-  }
-
-  res.json({ message: "OK" });
-
-  let repository;
-  if (req.body.repository.name === "storageApp-frontend") {
-    repository = "frontend";
-  } else {
-    repository = "backend";
-  }
-
-  const bashChildProcess = spawn("bash", [`/home/ubuntu/deploy-${repository}.sh`]);
-
-  bashChildProcess.stdout.on("data", (data) => {
-    process.stdout.write(data);
-  });
-
-  bashChildProcess.stderr.on("data", (err) => {
-    process.stderr.write(err);
-  });
-
-  bashChildProcess.on("close", (code) => {
-    if (code === 0) {
-      console.log("Script executed successfully");
-    } else {
-      console.log("Script failed");
-    }
-  });
-
-  bashChildProcess.on("error", (err) => {
-    console.log("Error in the spawning process!");
-    console.log(err);
-  });
+  return res.json({ message: "hello from cloud storage!" });
 });
 
 app.use("/directory", checkAuth, directoryRoutes);
