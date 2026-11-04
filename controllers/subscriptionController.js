@@ -17,12 +17,17 @@ export const createSubscription = async (req, res, next) => {
     }
 
     const subscriptionId = await createSubscriptionUrl(planId, user._id);
-    await Subscription.create({
-      planId,
-      userId: user.id,
-      subscriptionId,
-      expireAt: new Date(Date.now() + 60 * 60 * 24 * 1000),
-    });
+
+    await Subscription.findOneAndUpdate(
+      { userId: user._id },
+      {
+        planId,
+        userId: user.id,
+        subscriptionId,
+        expireAt: new Date(Date.now() + 60 * 60 * 24 * 1000),
+      },
+      { upsert: true },
+    );
     return res.json({ subscriptionId });
   } catch (error) {
     next(error);
