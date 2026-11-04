@@ -83,7 +83,7 @@ export const deleteFile = async (req, res, next) => {
   try {
     await file.deleteOne();
     await updateDirectoriesSize(file.parentDirId, -file.size);
-    const res = await deleteS3File(`${file.id}${file.extension}`);
+    await deleteS3File(`${file.id}${file.extension}`);
 
     return res.status(200).json({ message: "File Deleted Successfully" });
   } catch (err) {
