@@ -14,8 +14,8 @@ export const getDirectoryById = async (req, res) => {
     return res.status(404).json({ error: "Directory not found or you do not have access to it!" });
   }
 
-  const files = await File.find({ parentDirId: directoryData._id }).lean();
-  const directories = await Directory.find({ parentDirId: _id }).lean();
+  const files = await File.find({ parentDirId: directoryData._id, userId: user._id }).lean();
+  const directories = await Directory.find({ parentDirId: _id, userId: user._id }).lean();
 
   return res.status(200).json({
     ...directoryData,
@@ -28,10 +28,17 @@ export const createDirectory = async (req, res, next) => {
   const user = req.user;
   const parentDirId = req.params.parentDirId || user.rootDirId.toString();
 
-  const dirname = req.headers.dirname || "New Folder";
+  const reqDirname = req.headers.dirname;
+
+  const dirname =
+    typeof reqDirname === "string" && reqDirname.trim() ? reqDirname.trim() : "New Folder";
+
+  if (dirname.length > 255) {
+    return res.status(400).json({ error: "Invalid directory name" });
+  }
 
   try {
-    const parentDir = await Directory.findOne({ _id: parentDirId });
+    const parentDir = await Directory.findOne({ _id: parentDirId, userId: user._id });
 
     if (!parentDir) {
       return res.status(404).json({ message: "Parent Directory Does not exist!" });
@@ -46,9 +53,9 @@ export const createDirectory = async (req, res, next) => {
     return res.status(200).json({ message: "Directory Created!" });
   } catch (err) {
     if (err.code === 121) {
-      res.status(400).json({ error: "Invalid input, please enter valid details" });
+      return res.status(400).json({ error: "Invalid input, please enter valid details" });
     }
-    next(err);
+    return next(err);
   }
 };
 
@@ -57,9 +64,21 @@ export const renameDirectory = async (req, res, next) => {
   const { id } = req.params;
   const { newDirName } = req.body;
 
+  if (typeof newDirName !== "string" || !newDirName.trim() || newDirName.trim().length > 255) {
+    return res.status(400).json({ error: "Invalid directory name" });
+  }
+
   try {
-    await Directory.findOneAndUpdate({ _id: id, userId: user._id }, { name: newDirName });
-    res.status(200).json({ message: "Directory Renamed!" });
+    const directory = await Directory.findOneAndUpdate(
+      { _id: id, userId: user._id },
+      { name: newDirName.trim() },
+    );
+
+    if (!directory) {
+      return res.status(404).json({ error: "Directory not found!" });
+    }
+
+    return res.status(200).json({ message: "Directory Renamed!" });
   } catch (err) {
     next(err);
   }
@@ -67,6 +86,8 @@ export const renameDirectory = async (req, res, next) => {
 
 export const deleteDirectory = async (req, res, next) => {
   const { id } = req.params;
+  const user = req.user;
+
   try {
     const directoryData = await Directory.findOne({ _id: id, userId: req.user._id }).lean();
 
@@ -75,8 +96,8 @@ export const deleteDirectory = async (req, res, next) => {
     }
 
     async function getDirectoriesContent(id) {
-      let directories = await Directory.find({ parentDirId: id }).select("_id");
-      let files = await File.find({ parentDirId: id }).select("extension");
+      let directories = await Directory.find({ parentDirId: id, userId: user._id }).select("_id");
+      let files = await File.find({ parentDirId: id, userId: user._id }).select("extension");
 
       for (const { _id } of directories) {
         const { directories: childDirectories, files: childFiles } =
@@ -98,10 +119,11 @@ export const deleteDirectory = async (req, res, next) => {
       await deleteS3Files(keys);
     }
 
-    await File.deleteMany({ _id: { $in: files.map(({ _id }) => _id) } });
+    await File.deleteMany({ _id: { $in: files.map(({ _id }) => _id) }, userId: user._id });
 
     await Directory.deleteMany({
       _id: { $in: [...directories.map(({ _id }) => _id), id] },
+      userId: user._id,
     });
 
     await updateDirectoriesSize(directoryData.parentDirId, -directoryData.size);

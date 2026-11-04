@@ -91,7 +91,7 @@ export const deleteFile = async (req, res, next) => {
   }
 };
 
-export const uploadInitiate = async (req, res) => {
+export const uploadInitiate = async (req, res, next) => {
   const parentDirId = req.body.parentDirId || req.user.rootDirId;
   try {
     const parentDirData = await Directory.findOne({
@@ -104,8 +104,20 @@ export const uploadInitiate = async (req, res) => {
       return res.status(404).json({ error: "Parent directory not found!" });
     }
 
-    const filename = req.body.name || "untitled";
+    const requestedName = req.body.name;
+
+    const filename =
+      typeof requestedName === "string" && requestedName.trim() ? requestedName.trim() : "untitled";
+
+    if (filename.length > 255) {
+      return res.status(400).json({ error: "Invalid file name" });
+    }
+
     const filesize = req.body.size;
+
+    if (!Number.isSafeInteger(filesize) || filesize <= 0) {
+      return res.status(400).json({ error: "Invalid file size" });
+    }
 
     const user = await User.findById(req.user._id);
     const rootDir = await Directory.findById(req.user.rootDirId);
@@ -119,6 +131,12 @@ export const uploadInitiate = async (req, res) => {
 
     const extension = path.extname(filename);
 
+    const contentType = req.body.contentType;
+
+    if (typeof contentType !== "string" || !contentType.trim()) {
+      return res.status(400).json({ error: "Invalid file type" });
+    }
+
     const insertedFile = await File.insertOne({
       extension,
       name: filename,
@@ -130,17 +148,23 @@ export const uploadInitiate = async (req, res) => {
 
     const uploadedSignedUrl = await createUploadSignedUrl({
       key: `${insertedFile.id}${insertedFile.extension}`,
-      contentType: req.body.contentType,
+      contentType,
     });
 
     return res.json({ uploadedSignedUrl, fileId: insertedFile.id });
   } catch (err) {
-    console.dir(err, { depth: null });
+    console.log(err);
+    return next(err);
   }
 };
 
 export const uploadComplete = async (req, res) => {
-  const fileData = await File.findById(req.body.fileId);
+  const fileData = await File.findOne({
+    _id: req.body.fileId,
+    userId: req.user._id,
+    isUploading: true,
+  });
+
   if (!fileData) {
     return res.status(404).json({ error: "File not found in our records!" });
   }

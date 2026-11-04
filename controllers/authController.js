@@ -44,7 +44,11 @@ export const loginWithGoogle = async (req, res, next) => {
 
   const { idToken } = data;
   const userData = await verifyIdToken(idToken);
-  const { name, email, picture } = userData;
+  const { name, email, picture, email_verified } = userData;
+
+  if (!email_verified) {
+    return res.status(400).json({ error: "Google email is not verified" });
+  }
 
   const user = await User.findOne({ email });
   if (user) {
@@ -69,7 +73,7 @@ export const loginWithGoogle = async (req, res, next) => {
 
     const sessionId = crypto.randomUUID();
     const redisKey = `session:${sessionId}`;
-    await redisClient.json.set(redisKey, "$", { userId: user._id });
+    await redisClient.json.set(redisKey, "$", { userId: user._id.toString() });
     await redisClient.expire(redisKey, 60 * 60 * 24 * 7);
 
     res.cookie("sid", sessionId, {
@@ -98,14 +102,19 @@ export const loginWithGoogle = async (req, res, next) => {
         parentDirId: null,
         userId,
       },
-      { mongooseSession },
+      { session: mongooseSession },
     );
 
-    await User.insertOne({ _id: userId, name, email, picture, rootDirId }, { mongooseSession });
+    await User.insertOne(
+      { _id: userId, name, email, picture, rootDirId },
+      { session: mongooseSession },
+    );
+
+    await mongooseSession.commitTransaction();
 
     const sessionId = crypto.randomUUID();
     const redisKey = `session:${sessionId}`;
-    await redisClient.json.set(redisKey, "$", { userId: user._id });
+    await redisClient.json.set(redisKey, "$", { userId: userId.toString() });
     await redisClient.expire(redisKey, 60 * 60 * 24 * 7);
 
     res.cookie("sid", sessionId, {
@@ -116,11 +125,11 @@ export const loginWithGoogle = async (req, res, next) => {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    mongooseSession.commitTransaction();
-
     res.status(201).json({ message: "account registered and logged in!" });
   } catch (err) {
-    mongooseSession.abortTransaction();
+    await mongooseSession.abortTransaction();
     next(err);
+  } finally {
+    await mongooseSession.endSession();
   }
 };

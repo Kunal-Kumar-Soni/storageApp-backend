@@ -17,6 +17,11 @@ export default async function checkAuth(req, res, next) {
   }
 
   const user = await User.findById(session.userId);
+  if (!user || user.deleted) {
+    await redisClient.del(redisKey);
+    res.clearCookie("sid");
+    return res.status(401).json({ error: "Not logged in!" });
+  }
 
   req.user = user;
   next();

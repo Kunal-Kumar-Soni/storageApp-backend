@@ -8,16 +8,21 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const bucket = process.env.AWS_S3_BUCKET;
+if (!bucket) {
+  throw new Error("Missing required environment variable: AWS_S3_BUCKET");
+}
+
 export const s3Client = new S3Client({
   credentials: {
-    accessKeyId: "AKIAWS3327VJZJNRY5VS",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 
 export const createUploadSignedUrl = async ({ key, contentType }) => {
   const command = new PutObjectCommand({
-    Bucket: "kunal-storage-app",
+    Bucket: bucket,
     Key: key,
     ContentType: contentType,
   });
@@ -32,7 +37,7 @@ export const createUploadSignedUrl = async ({ key, contentType }) => {
 
 export const createGetSignedUrl = async ({ key, download = false, filename }) => {
   const command = new GetObjectCommand({
-    Bucket: "kunal-storage-app",
+    Bucket: bucket,
     Key: key,
     ResponseContentDisposition: `${download ? "attachment" : "inline"}; filename=${encodeURIComponent(filename)}`,
   });
@@ -45,7 +50,7 @@ export const createGetSignedUrl = async ({ key, download = false, filename }) =>
 };
 export const getS3FileMetaData = async (key) => {
   const command = new HeadObjectCommand({
-    Bucket: "kunal-storage-app",
+    Bucket: bucket,
     Key: key,
   });
 
@@ -53,7 +58,7 @@ export const getS3FileMetaData = async (key) => {
 };
 export const deleteS3File = async (key) => {
   const command = new DeleteObjectCommand({
-    Bucket: "kunal-storage-app",
+    Bucket: bucket,
     Key: key,
   });
 
@@ -61,7 +66,7 @@ export const deleteS3File = async (key) => {
 };
 export const deleteS3Files = async (keys) => {
   const command = new DeleteObjectsCommand({
-    Bucket: "kunal-storage-app",
+    Bucket: bucket,
     Delete: {
       Objects: keys,
       Quiet: false,

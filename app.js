@@ -12,8 +12,6 @@ import checkAuth from "./middleware/auth.js";
 import { connectDB } from "./config/db.js";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
-import { spawn } from "child_process";
-import crypto from "crypto";
 
 await connectDB();
 
@@ -53,8 +51,8 @@ app.use("/auth", authRoutes);
 app.use("/webhooks", webhookRoutes);
 
 app.use((err, req, res, next) => {
-  // return res.status(err.status || 500).json({ error: "Something went wrong!" });
-  return res.json(err);
+  console.log(err);
+  return res.status(err.status || 500).json({ error: "Something went wrong!" });
 });
 
 app.listen(PORT, () => {
