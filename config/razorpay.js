@@ -13,3 +13,7 @@ export const createSubscriptionUrl = async (planId, userId) => {
   });
   return id;
 };
+
+export const cancelSubscriptionImmediately = async (subscriptionId) => {
+  await razorpay.subscriptions.cancel(subscriptionId, false);
+};

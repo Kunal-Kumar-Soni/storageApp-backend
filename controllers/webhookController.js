@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import { cancelSubscriptionImmediately } from "../config/razorpay.js";
 import Subscription from "../models/subscriptionModel.js";
 import User from "../models/userModel.js";
 
@@ -47,7 +48,19 @@ export const handleRazorpayWebhook = async (req, res) => {
     const subscription = await Subscription.findOneAndUpdate(
       { subscriptionId: id },
       { $set: { status }, $unset: { expireAt: true } },
+      { returnDocument: "after" },
     );
+
+    const olderSubscription = await Subscription.findOne({
+      userId: subscription?.userId,
+      subscriptionId: { $ne: id },
+    });
+
+    if (olderSubscription) {
+      await cancelSubscriptionImmediately(olderSubscription?.subscriptionId);
+      await Subscription.findOneAndDelete({ _id: olderSubscription?._id });
+    }
+
     await User.findByIdAndUpdate(subscription.userId, {
       $set: { maxStorageInBytes: PLAN[plan_id].storageQuotaBytes },
     });
@@ -60,6 +73,19 @@ export const handleRazorpayWebhook = async (req, res) => {
       { $set: { status } },
       { returnDocument: "after" },
     );
+
+    if (!subscription) {
+      return res.json({ message: "subscription already removed!" });
+    }
+
+    const activeSubscription = await Subscription.exists({
+      userId: subscription.userId,
+      status: "active",
+    });
+
+    if (activeSubscription) {
+      return res.json({ message: "subscription paused!" });
+    }
 
     await User.findByIdAndUpdate(subscription.userId, {
       $set: { maxStorageInBytes: defaultStorageQuota },
@@ -86,6 +112,19 @@ export const handleRazorpayWebhook = async (req, res) => {
       { $set: { status: status, expireAt: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000) } },
       { returnDocument: "after" },
     );
+
+    if (!subscription) {
+      return res.json({ message: "subscription already removed!" });
+    }
+
+    const activeSubscription = await Subscription.exists({
+      userId: subscription.userId,
+      status: "active",
+    });
+
+    if (activeSubscription) {
+      return res.json({ message: "subscription cancelled!" });
+    }
 
     await User.findByIdAndUpdate(subscription.userId, {
       $set: { maxStorageInBytes: defaultStorageQuota },
